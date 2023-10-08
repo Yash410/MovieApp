@@ -14,20 +14,4 @@ import com.example.movieapp.model.Result
 abstract class MovieDatabase: RoomDatabase() {
 
     abstract fun getMovieDao(): MovieDao
-
-    companion object {
-        private var instance: MovieDatabase? = null
-        private val LOCK = Any()
-
-        operator fun invoke(context: Context) = instance ?: synchronized(LOCK) {
-            instance ?: createDatabase(context).also { instance = it }
-        }
-
-        private fun createDatabase(context: Context) =
-            Room.databaseBuilder(
-                context.applicationContext,
-                MovieDatabase::class.java,
-                "movie_db.db0"
-            ).build()
-    }
 }

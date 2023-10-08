@@ -1,30 +1,41 @@
 package com.example.movieapp.ui.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.movieapp.R
-import com.example.movieapp.adapter.MovieAdapter
-import com.example.movieapp.ui.MovieActivity
-import com.example.movieapp.ui.MovieViewModel
-import kotlinx.android.synthetic.main.fragment_saved_movies.recycler_view_saved_movies
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import com.example.movieapp.model.MovieDetail
-import com.example.movieapp.model.Result
+import com.example.movieapp.R
+import com.example.movieapp.adapter.MovieAdapter
+import com.example.movieapp.databinding.FragmentSavedMoviesBinding
+import com.example.movieapp.ui.MovieViewModel
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class SavedMoviesFragment: Fragment(R.layout.fragment_saved_movies) {
 
-    lateinit var movieViewModel: MovieViewModel
-    lateinit var movieAdapter: MovieAdapter
+    private val movieViewModel by viewModels<MovieViewModel>()
+    @Inject lateinit var movieAdapter: MovieAdapter
+    lateinit var binding: FragmentSavedMoviesBinding
 
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentSavedMoviesBinding.inflate(inflater, container, false)
+        return binding.root
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        movieViewModel = (activity as MovieActivity).viewModel
         setupRecyclerView()
 
         movieAdapter.setItemOnClickListener {
@@ -64,13 +75,12 @@ class SavedMoviesFragment: Fragment(R.layout.fragment_saved_movies) {
         }
 
         ItemTouchHelper(itemTouchHelperCallback).apply {
-            attachToRecyclerView(recycler_view_saved_movies)
+            attachToRecyclerView(binding.recyclerViewSavedMovies)
         }
     }
 
     private fun setupRecyclerView() {
-        movieAdapter = MovieAdapter()
-        recycler_view_saved_movies.apply {
+        binding.recyclerViewSavedMovies.apply {
             adapter = movieAdapter
             layoutManager = GridLayoutManager(activity, 2)
         }

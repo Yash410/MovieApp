@@ -1,37 +1,39 @@
 package com.example.movieapp.ui.fragments
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import com.bumptech.glide.Glide
 import com.example.movieapp.R
+import com.example.movieapp.databinding.FragmentMovieBinding
 import com.example.movieapp.model.MovieDetail
 import com.example.movieapp.model.Result
-import com.example.movieapp.ui.MovieActivity
 import com.example.movieapp.ui.MovieViewModel
 import com.example.movieapp.utils.Constants.Companion.IMAGE_BASE_URL
 import com.example.movieapp.utils.Resource
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_movie.fab
-import kotlinx.android.synthetic.main.fragment_movie.iv_movie_poster
-import kotlinx.android.synthetic.main.fragment_movie.linearLayout
-import kotlinx.android.synthetic.main.fragment_movie.movie_budget
-import kotlinx.android.synthetic.main.fragment_movie.movie_overview
-import kotlinx.android.synthetic.main.fragment_movie.movie_popularity
-import kotlinx.android.synthetic.main.fragment_movie.movie_release_date
-import kotlinx.android.synthetic.main.fragment_movie.movie_revenue
-import kotlinx.android.synthetic.main.fragment_movie.movie_runtime
-import kotlinx.android.synthetic.main.fragment_movie.movie_tagline
-import kotlinx.android.synthetic.main.fragment_movie.movie_title
-import kotlinx.android.synthetic.main.fragment_movie.paginationProgressBar
-import kotlinx.android.synthetic.main.fragment_movie.txt_error
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MovieFragment: Fragment(R.layout.fragment_movie) {
 
-    lateinit var movieViewModel: MovieViewModel
+    private val movieViewModel by viewModels<MovieViewModel>()
+    lateinit var binding: FragmentMovieBinding
     lateinit var movieObserver: Observer<in Resource<MovieDetail>?>
     var movieResult: Result? = null
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        binding = FragmentMovieBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -47,40 +49,41 @@ class MovieFragment: Fragment(R.layout.fragment_movie) {
                 }
                 is Resource.Error -> {
                     hideProgressBar()
-                    txt_error.visibility = View.VISIBLE
+                    binding.txtError.visibility = View.VISIBLE
                 }
                 is Resource.Loading -> {
                     showProgressBar()
                 }
+
+                else -> null
             }
         }
 
-        movieViewModel = (activity as MovieActivity).viewModel
         val movieId = arguments?.get("movieId")
         movieId.let {
             movieViewModel.getMovieDetail(movieId.toString())
         }
 
-        fab.setOnClickListener {
+        binding.fab.setOnClickListener {
             movieResult?.let {
                 movieViewModel.saveMovie(it)
                 Snackbar.make(view, "Article saved successfully!", Snackbar.LENGTH_SHORT).show()
             }
         }
-        movieViewModel.movieDetail.observe(viewLifecycleOwner, movieObserver)
+        movieViewModel.movieDetailLiveData.observe(viewLifecycleOwner, movieObserver)
     }
 
     private fun setViewWithValues(movie: MovieDetail) {
         val movieURl = IMAGE_BASE_URL.plus(movie.poster_path)
-        Glide.with(linearLayout).load(movieURl).into(iv_movie_poster)
-        movie_title.text = movie.title
-        movie_tagline.text = movie.tagline
-        movie_release_date.text = movie.release_date
-        movie_popularity.text = movie.popularity.toInt().toString()
-        movie_runtime.text = movie.runtime.toString()
-        movie_budget.text = movie.budget.toString()
-        movie_overview.text = movie.overview
-        movie_revenue.text = movie.revenue.toString()
+        Glide.with(binding.linearLayout).load(movieURl).into(binding.ivMoviePoster)
+        binding.movieTitle.text = movie.title
+        binding.movieTagline.text = movie.tagline
+        binding.movieReleaseDate.text = movie.release_date
+        binding.moviePopularity.text = movie.popularity.toInt().toString()
+        binding.movieRuntime.text = movie.runtime.toString()
+        binding.movieBudget.text = movie.budget.toString()
+        binding.movieOverview.text = movie.overview
+        binding.movieRevenue.text = movie.revenue.toString()
     }
 
     private fun movieDetailToMovie(movieDetail: MovieDetail): Result =
@@ -101,22 +104,16 @@ class MovieFragment: Fragment(R.layout.fragment_movie) {
         )
 
     private fun hideProgressBar() {
-        paginationProgressBar.visibility = View.INVISIBLE
-        fab.show()
+        binding.paginationProgressBar.visibility = View.INVISIBLE
+        binding.fab.show()
         isLoading = false
     }
 
     private fun showProgressBar() {
-        paginationProgressBar.visibility = View.VISIBLE
-        fab.hide()
+        binding.paginationProgressBar.visibility = View.VISIBLE
+        binding.fab.hide()
         isLoading = true
     }
 
     var isLoading = false
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        movieViewModel.movieDetail.removeObserver(movieObserver)
-        movieViewModel.movieDetail.postValue(Resource.Loading())
-    }
 }
