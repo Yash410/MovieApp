@@ -1,25 +1,22 @@
 package com.example.movieapp.repository
 
-import com.example.movieapp.api.RetrofitInstance
-import com.example.movieapp.database.MovieDatabase
+import androidx.lifecycle.LiveData
 import com.example.movieapp.model.MovieDetail
+import com.example.movieapp.model.MovieResponse
 import com.example.movieapp.model.Result
+import retrofit2.Response
 
-class MovieRepository(
-    private val db: MovieDatabase
-) {
-    suspend fun getPopularMovies(pageNumber: Int) =
-        RetrofitInstance.api.getPopularMovies(pageNumber)
+interface MovieRepository {
 
-    suspend fun searchMovies(searchQuery: String, pageNumber: Int) =
-        RetrofitInstance.api.searchForMovies(searchQuery = searchQuery, pageNumber = pageNumber)
+    suspend fun getPopularMovies(pageNumber: Int): Response<MovieResponse>
 
-    suspend fun getMovieDetails(movieId: String) =
-        RetrofitInstance.api.movieDetails(movieId)
+    suspend fun getMovieDetails(movieId: String): Response<MovieDetail>
 
-    suspend fun upsert(movie: Result) = db.getMovieDao().upsert(movie)
+    suspend fun upsert(movie: Result)
 
-    fun getSavedMovies() = db.getMovieDao().getAllMovies()
+    fun getSavedMovies(): LiveData<List<Result>>
 
-    suspend fun deleteMovie(movie: Result) = db.getMovieDao().delete(movie)
+    suspend fun deleteMovie(movie: Result)
+
+    suspend fun searchMovies(searchQuery: String, pageNumber: Int): Response<MovieResponse>
 }

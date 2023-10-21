@@ -1,5 +1,6 @@
 package com.example.movieapp.ui
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,21 +9,32 @@ import com.example.movieapp.model.MovieResponse
 import com.example.movieapp.model.Result
 import com.example.movieapp.repository.MovieRepository
 import com.example.movieapp.utils.Resource
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import javax.inject.Inject
 
-class MovieViewModel(
+@HiltViewModel
+class MovieViewModel @Inject constructor(
     private val movieRepository: MovieRepository
 ): ViewModel() {
-    val popularMovies: MutableLiveData<Resource<MovieResponse>> = MutableLiveData()
-    val searchMovies: MutableLiveData<Resource<MovieResponse>> = MutableLiveData()
-    val movieDetail: MutableLiveData<Resource<MovieDetail>> = MutableLiveData()
+    private val _popularMoviesLiveData: MutableLiveData<Resource<MovieResponse>> = MutableLiveData()
+    val popularMoviesLiveData: LiveData<Resource<MovieResponse>>
+        get() = _popularMoviesLiveData
 
-    var popularMoviesPage = 1
-    var popularMoviesResponse: MovieResponse? = null
+    private val _searchMoviesLiveData: MutableLiveData<Resource<MovieResponse>> = MutableLiveData()
+    val searchMoviesLiveData: LiveData<Resource<MovieResponse>>
+        get() = _searchMoviesLiveData
 
-    var searchMoviesPage = 1
-    var searchMovieResponse: MovieResponse? = null
+    private val _movieDetailLiveData: MutableLiveData<Resource<MovieDetail>> = MutableLiveData()
+    val movieDetailLiveData: LiveData<Resource<MovieDetail>>
+        get() = _movieDetailLiveData
+
+    private var popularMoviesPage = 1
+    private var popularMoviesResponse: MovieResponse? = null
+
+    private var searchMoviesPage = 1
+    private var searchMovieResponse: MovieResponse? = null
 
     init {
         getPopularMovies()
@@ -30,9 +42,9 @@ class MovieViewModel(
 
 
     fun getPopularMovies() = viewModelScope.launch {
-        popularMovies.postValue(Resource.Loading())
+        _popularMoviesLiveData.postValue(Resource.Loading())
         val response = movieRepository.getPopularMovies(popularMoviesPage)
-        popularMovies.postValue(handlePopularMoviesResponse(response))
+        _popularMoviesLiveData.postValue(handlePopularMoviesResponse(response))
     }
 
     private fun handlePopularMoviesResponse(response: Response<MovieResponse>): Resource<MovieResponse> {
@@ -53,9 +65,9 @@ class MovieViewModel(
     }
 
     fun searchForMovies(searchQuery: String) = viewModelScope.launch {
-        searchMovies.postValue(Resource.Loading())
+        _searchMoviesLiveData.postValue(Resource.Loading())
         val response = movieRepository.searchMovies(searchQuery, searchMoviesPage)
-        searchMovies.postValue(handleSearchMoviesResponse(response))
+        _searchMoviesLiveData.postValue(handleSearchMoviesResponse(response))
     }
 
     private fun handleSearchMoviesResponse(response: Response<MovieResponse>): Resource<MovieResponse> {
@@ -75,9 +87,9 @@ class MovieViewModel(
     }
 
     fun getMovieDetail(movieId: String) = viewModelScope.launch {
-        movieDetail.postValue(Resource.Loading())
+        _movieDetailLiveData.postValue(Resource.Loading())
         val response = movieRepository.getMovieDetails(movieId)
-        movieDetail.postValue(handleMovieDetailResponse(response))
+        _movieDetailLiveData.postValue(handleMovieDetailResponse(response))
     }
 
     private fun handleMovieDetailResponse(response: Response<MovieDetail>): Resource<MovieDetail> {
